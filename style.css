@@ -1,0 +1,158 @@
+/* style.css */
+:root {
+  --primary: #f5a623;
+  --secondary: #fff3e0;
+  --accent: #ff6f61;
+  --today-bg: #ffeb3b;
+}
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+  display: flex;
+  height: 100vh;
+  background-color: var(--secondary);
+  overflow: hidden;
+}
+
+#bgVideo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.container {
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.calendar,
+.todo {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 12px;
+}
+
+.calendar {
+  flex: 2;
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.nav button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.month-year {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.grid div {
+  padding: 10px;
+  text-align: center;
+  border-radius: 4px;
+}
+
+.weekday {
+  font-weight: bold;
+  background: var(--secondary);
+}
+
+.day {
+  background: #f9f9f9;
+  cursor: pointer;
+}
+
+.today {
+  background: var(--today-bg);
+}
+
+.marked::after {
+  content: "📌";
+  display: block;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.todo {
+  flex: 1;
+  padding: 20px;
+}
+
+.todo h2 {
+  margin-top: 0;
+}
+
+.todo input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.todo button {
+  padding: 8px 12px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.tasks {
+  margin-top: 20px;
+  list-style: none;
+  padding: 0;
+}
+
+.tasks li {
+  background: #fff;
+  padding: 8px;
+  margin-bottom: 6px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tasks li button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+/* Season-specific video fallback color in case video does not load */
+body.winter { background-color: #a1d6ed; }
+body.spring { background-color: #f0bbde; }
+body.summer { background-color: #eff28f; }
+body.autumn { background-color: #e3b594; }
