@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>2025 Cute Calendar + To‑Do</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
   <video id="bgVideo" autoplay muted loop playsinline>
-    <source src="winter.mp4" type="video/mp4">
+    <source src="winter.mp4" type="video/mp4" />
     Your browser does not support the video tag.
   </video>
 
@@ -27,13 +27,17 @@
         <div class="weekday">Sat</div>
       </div>
       <div class="grid days" id="calendarDays"></div>
+      <p id="taskMessage"></p>
+      <div class="task-input-box">
+        <input type="text" id="taskInput" placeholder="Add a task and pick a date" />
+        <button id="addTask">Add Task</button>
+        <button id="deleteTask" style="display: none; background: #e74c3c; color: white; border-radius: 4px; padding: 8px 12px; border: none; cursor: pointer;">Delete Task</button>
+      </div>
     </section>
 
-    <!-- To‑Do Panel -->
-    <aside class="todo">
+    <!-- Hidden To‑Do Panel (kept for structure) -->
+    <aside class="todo" style="display: none;">
       <h2>To‑Do List</h2>
-      <input type="text" id="taskInput" placeholder="Add a task and pick a date" />
-      <button id="addTask">Add Task</button>
       <ul class="tasks" id="taskList"></ul>
     </aside>
   </div>
