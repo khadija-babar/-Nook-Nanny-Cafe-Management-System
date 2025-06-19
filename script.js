@@ -1,4 +1,3 @@
-// script.js
 const monthNames = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
@@ -12,8 +11,10 @@ const prevBtn = document.getElementById('prev');
 const nextBtn = document.getElementById('next');
 const taskInput = document.getElementById('taskInput');
 const addTaskBtn = document.getElementById('addTask');
+const deleteTaskBtn = document.getElementById('deleteTask');
 const taskList = document.getElementById('taskList');
 const bgVideo = document.getElementById('bgVideo');
+const taskMessage = document.getElementById('taskMessage');
 
 function setSeasonClass(month) {
   document.body.classList.remove('winter', 'spring', 'summer', 'autumn');
@@ -48,19 +49,37 @@ function renderCalendar() {
     cell.classList.add('day');
 
     const now = new Date();
-    if (now.getFullYear() === current.getFullYear() &&
-        now.getMonth() === current.getMonth() &&
-        now.getDate() === day) {
+    if (
+      now.getFullYear() === current.getFullYear() &&
+      now.getMonth() === current.getMonth() &&
+      now.getDate() === day
+    ) {
       cell.classList.add('today');
     }
 
     const dateKey = `${current.getFullYear()}-${current.getMonth()}-${day}`;
-    if (tasks.some(t => t.date === dateKey)) cell.classList.add('marked');
+    const matchingTask = tasks.find(t => t.date === dateKey);
+    if (matchingTask) {
+      cell.classList.add('marked');
+    }
 
     cell.addEventListener('click', () => {
+      const task = tasks.find(t => t.date === dateKey);
+      taskInput.style.display = 'block';
+      addTaskBtn.style.display = 'block';
+      deleteTaskBtn.style.display = task ? 'block' : 'none';
+
       taskInput.dataset.date = dateKey;
       taskInput.placeholder = `Task for ${monthNames[current.getMonth()]} ${day}`;
       taskInput.focus();
+
+      if (task) {
+        taskInput.value = task.text;
+        taskMessage.textContent = `📝 ${task.text}`;
+      } else {
+        taskInput.value = '';
+        taskMessage.textContent = '';
+      }
     });
 
     daysEl.appendChild(cell);
@@ -95,19 +114,57 @@ prevBtn.addEventListener('click', () => {
   current.setMonth(current.getMonth() - 1);
   saveAndRender();
 });
+
 nextBtn.addEventListener('click', () => {
   current.setMonth(current.getMonth() + 1);
   saveAndRender();
 });
+
 addTaskBtn.addEventListener('click', () => {
   const text = taskInput.value.trim();
   const date = taskInput.dataset.date;
   if (!text || !date) return;
-  tasks.push({ date, text });
+
+  const index = tasks.findIndex(t => t.date === date);
+  if (index !== -1) {
+    tasks[index].text = text;
+  } else {
+    tasks.push({ date, text });
+  }
+
   taskInput.value = '';
   taskInput.removeAttribute('data-date');
   taskInput.placeholder = 'Add a task and pick a date';
+  taskInput.style.display = 'none';
+  addTaskBtn.style.display = 'none';
+  deleteTaskBtn.style.display = 'none';
+
+  // 🟡 Add pulse animation
+  taskMessage.textContent = `📝 ${text}`;
+  taskMessage.classList.add('pulse');
+  setTimeout(() => taskMessage.classList.remove('pulse'), 600);
+
   saveAndRender();
 });
+
+
+deleteTaskBtn.addEventListener('click', () => {
+  const date = taskInput.dataset.date;
+  const index = tasks.findIndex(t => t.date === date);
+  if (index !== -1) {
+    tasks.splice(index, 1);
+    saveAndRender();
+    taskInput.value = '';
+    taskInput.removeAttribute('data-date');
+    taskInput.style.display = 'none';
+    addTaskBtn.style.display = 'none';
+    deleteTaskBtn.style.display = 'none';
+    taskMessage.textContent = '';
+  }
+});
+
+taskInput.style.display = 'none';
+addTaskBtn.style.display = 'none';
+deleteTaskBtn.style.display = 'none';
 
 saveAndRender();
