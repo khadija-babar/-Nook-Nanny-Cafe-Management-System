@@ -1,9 +1,60 @@
+// User system with all roles
+const users = {
+  "manager": { password: "manager123", role: "manager" },
+  "barista": { password: "barista123", role: "barista" },
+  "cook": { password: "cook123", role: "cook" },
+  "kitchenhelper": { password: "helper123", role: "kitchenhelper" },
+  "cleaner": { password: "cleaner123", role: "cleaner" },
+  "receptionist": { password: "reception123", role: "receptionist" },
+  "nanny": { password: "nanny123", role: "nanny" }
+};
+
+let currentUser = null;
+
+// Login elements
+const loginOverlay = document.getElementById('loginOverlay');
+const usernameInput = document.getElementById('usernameInput');
+const passwordInput = document.getElementById('passwordInput');
+const loginBtn = document.getElementById('loginBtn');
+const loginMessage = document.getElementById('loginMessage');
+const logoutBtn = document.getElementById('logoutBtn');
+const userInfoDisplay = document.getElementById('userInfoDisplay');
+
+// Calendar elements
 const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 let current = new Date();
 let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
 let logs = JSON.parse(localStorage.getItem('logs') || '{}');
 
-// Elements
+// Staff and attendance constants
+const staff = ["Manager", "Barista", "Cook", "KitchenHelper", "Cleaner", "Receptionist", "Nanny"];
+const ABSENCE_DEDUCTION = 1000;
+
+// Salary information
+const salaries = {
+  Manager: 50000,
+  Barista: 15000,
+  Cook: 20000,
+  KitchenHelper: 10000,
+  Cleaner: 20000,
+  Receptionist: 10000,
+  Nanny: 2000 // per child
+};
+
+// Menu items
+const drinkItems = [
+  { name: "Coffee", price: 300 },
+  { name: "Tea", price: 200 },
+  { name: "Smoothie", price: 400 }
+];
+
+const foodItems = [
+  { name: "Sandwich", price: 500 },
+  { name: "Cake", price: 350 },
+  { name: "Pasta", price: 600 }
+];
+
+// DOM Elements
 const monthYearEl = document.getElementById('monthYear');
 const daysEl = document.getElementById('calendarDays');
 const prevBtn = document.getElementById('prev');
@@ -19,6 +70,7 @@ const logKids = document.getElementById('logKids');
 const logExpenses = document.getElementById('logExpenses');
 const drinksMenu = document.getElementById('drinksMenu');
 const foodMenu = document.getElementById('foodMenu');
+const attendanceSection = document.getElementById('attendanceSection');
 const saveLogBtn = document.getElementById('saveLog');
 const backBtn = document.getElementById('backBtn');
 const logSummary = document.getElementById('logSummary');
@@ -32,27 +84,95 @@ const showSummaryBtn = document.getElementById('showSummary');
 
 const bgVideo = document.getElementById('bgVideo');
 
-const drinkItems = [
-  { name: "Coffee", price: 300 },
-  { name: "Tea", price: 200 },
-  { name: "Smoothie", price: 400 }
-];
-const foodItems = [
-  { name: "Sandwich", price: 500 },
-  { name: "Cake", price: 350 },
-  { name: "Pasta", price: 600 }
-];
+// Role-specific sections
+const nannySection = document.getElementById('nannySection');
+const baristaSection = document.getElementById('baristaSection');
+const kitchenSection = document.getElementById('kitchenSection');
+const managerSection = document.getElementById('managerSection');
 
-// Employee salaries
-const salaries = {
-  Manager: 50000,
-  Barista: 15000,
-  Cook: 20000,
-  KitchenHelper: 10000,
-  Cleaner: 20000,
-  Receptionist: 10000,
-  Nanny: 2000 // per child
+// Login function
+loginBtn.onclick = function() {
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value.trim();
+  
+  if (!username || !password) {
+    loginMessage.textContent = "Please enter both username and password";
+    return;
+  }
+  
+  if (users[username] && users[username].password === password) {
+    currentUser = {
+      username: username,
+      role: users[username].role
+    };
+    
+    loginOverlay.style.display = 'none';
+    updateUIForUserRole();
+    renderCalendar();
+    
+    // Show user info and logout button for all users
+    userInfoDisplay.style.display = 'block';
+    userInfoDisplay.textContent = `Logged in as: ${username} (${users[username].role})`;
+    logoutBtn.style.display = 'inline';
+  } else {
+    loginMessage.textContent = "Invalid username or password";
+  }
 };
+
+// Logout function
+logoutBtn.onclick = function() {
+  currentUser = null;
+  loginOverlay.style.display = 'flex';
+  logoutBtn.style.display = 'none';
+  userInfoDisplay.style.display = 'none';
+  document.querySelector('.container').classList.add('view-only');
+  
+  // Clear inputs
+  usernameInput.value = '';
+  passwordInput.value = '';
+  loginMessage.textContent = '';
+  taskInput.value = '';
+  taskMessage.textContent = '';
+};
+
+// Update UI based on user role
+function updateUIForUserRole() {
+  const isManager = currentUser.role === "manager";
+  const container = document.querySelector('.container');
+  
+  // Hide all role sections first
+  nannySection.style.display = 'none';
+  baristaSection.style.display = 'none';
+  kitchenSection.style.display = 'none';
+  managerSection.style.display = 'none';
+  
+  if (!isManager) {
+    container.classList.add('view-only');
+    taskInput.readOnly = true;
+    addTaskBtn.style.display = 'none';
+    deleteTaskBtn.style.display = 'none';
+    
+    // Show relevant section based on role
+    switch(currentUser.role) {
+      case "nanny":
+        nannySection.style.display = 'block';
+        break;
+      case "barista":
+        baristaSection.style.display = 'block';
+        break;
+      case "cook":
+      case "kitchenhelper":
+        kitchenSection.style.display = 'block';
+        break;
+    }
+  } else {
+    container.classList.remove('view-only');
+    taskInput.readOnly = false;
+    addTaskBtn.style.display = 'inline';
+    deleteTaskBtn.style.display = 'inline';
+    managerSection.style.display = 'block';
+  }
+}
 
 // Apply season video
 function setSeasonClass(m) {
@@ -72,6 +192,8 @@ function setSeasonClass(m) {
 
 // Build calendar
 function renderCalendar() {
+  if (!currentUser) return; // Don't render until logged in
+  
   const y = current.getFullYear(), m = current.getMonth();
   monthYearEl.textContent = `${monthNames[m]} ${y}`;
   daysEl.innerHTML = "";
@@ -96,9 +218,11 @@ function renderCalendar() {
       if (T) {
         // show existing task
         taskMessage.textContent = `📝 ${T.text}`;
-        taskInput.style.display = addTaskBtn.style.display = deleteTaskBtn.style.display = 'inline';
-        taskInput.dataset.date = key;
-        taskInput.value = T.text;
+        if (currentUser.role === "manager") {
+          taskInput.style.display = addTaskBtn.style.display = deleteTaskBtn.style.display = 'inline';
+          taskInput.dataset.date = key;
+          taskInput.value = T.text;
+        }
       } else {
         promptMenu(key,m,d);
       }
@@ -108,8 +232,13 @@ function renderCalendar() {
   setSeasonClass(current.getMonth());
 }
 
-// Options 1|2|3
+// Options menu
 function promptMenu(key,mName,d) {
+  if (currentUser.role !== "manager") {
+    taskMessage.textContent = "Only managers can add/edit content";
+    return;
+  }
+  
   const opt = prompt("1 Add Task\n2 Delete Task\n3 Daily Report");
   if (opt==='1') {
     taskInput.style.display = addTaskBtn.style.display = 'inline';
@@ -127,57 +256,160 @@ function promptMenu(key,mName,d) {
 
 // Open daily-log overlay
 function openLog(key) {
+  if (!logs[key] && currentUser.role !== "manager") {
+    taskMessage.textContent = "No log available for this date";
+    return;
+  }
+  
   dailyLog.style.display = 'flex';
   logDate.textContent = `Log for ${key}`;
   logDate.dataset.key = key;
+  
+  // Reset all fields
   logKids.value = '';
   logExpenses.value = '';
   drinksMenu.innerHTML = '';
   foodMenu.innerHTML = '';
+  attendanceSection.innerHTML = '';
   logSummary.textContent = '';
 
-  // Create drink items inputs with unique classes
-  drinkItems.forEach(i => {
-    drinksMenu.innerHTML += `
-      <label>
-        ${i.name} 
-        <input 
-          data-name="${i.name}" 
-          data-price="${i.price}" 
-          type="number" 
-          min="0" 
-          value="0"
-          class="drink-input"
-        />
-      </label>
-    `;
-  });
+  // Show relevant sections based on role
+  nannySection.style.display = 'none';
+  baristaSection.style.display = 'none';
+  kitchenSection.style.display = 'none';
+  managerSection.style.display = 'none';
 
-  // Create food items inputs with unique classes
-  foodItems.forEach(i => {
-    foodMenu.innerHTML += `
-      <label>
-        ${i.name} 
-        <input 
-          data-name="${i.name}" 
-          data-price="${i.price}" 
-          type="number" 
-          min="0" 
-          value="0"
-          class="food-input"
-        />
-      </label>
-    `;
-  });
+  // Always show attendance for all roles
+  attendanceSection.innerHTML = `
+    <h3>Your Attendance</h3>
+    <label>
+      ${currentUser.role}:
+      <select class="attendance-select" data-role="${currentUser.role}" ${currentUser.role !== "manager" ? 'disabled' : ''}>
+        <option value="present">Present</option>
+        <option value="absent">Absent (-PKR ${ABSENCE_DEDUCTION})</option>
+        <option value="leave">On Leave</option>
+      </select>
+    </label>
+  `;
+
+  // Show role-specific sections
+  switch(currentUser.role) {
+    case "manager":
+      managerSection.style.display = 'block';
+      nannySection.style.display = 'block';
+      baristaSection.style.display = 'block';
+      kitchenSection.style.display = 'block';
+      
+      // Create full attendance section
+      attendanceSection.innerHTML = `
+        <h3>Staff Attendance</h3>
+        ${staff.map(role => `
+          <label>
+            ${role}:
+            <select class="attendance-select" data-role="${role}">
+              <option value="present">Present</option>
+              <option value="absent">Absent (-PKR ${ABSENCE_DEDUCTION})</option>
+              <option value="leave">On Leave</option>
+            </select>
+          </label>
+        `).join('')}
+      `;
+
+      // Create drink items inputs
+      drinkItems.forEach(i => {
+        drinksMenu.innerHTML += `
+          <label>
+            ${i.name} 
+            <input 
+              data-name="${i.name}" 
+              data-price="${i.price}" 
+              type="number" 
+              min="0" 
+              value="0"
+              class="drink-input"
+            />
+          </label>
+        `;
+      });
+
+      // Create food items inputs
+      foodItems.forEach(i => {
+        foodMenu.innerHTML += `
+          <label>
+            ${i.name} 
+            <input 
+              data-name="${i.name}" 
+              data-price="${i.price}" 
+              type="number" 
+              min="0" 
+              value="0"
+              class="food-input"
+            />
+          </label>
+        `;
+      });
+      break;
+      
+    case "barista":
+      baristaSection.style.display = 'block';
+      drinkItems.forEach(i => {
+        drinksMenu.innerHTML += `
+          <label>
+            ${i.name} Sold: 
+            <input 
+              data-name="${i.name}" 
+              data-price="${i.price}" 
+              type="number" 
+              min="0" 
+              value="0"
+              class="drink-input"
+              readonly
+            />
+          </label>
+        `;
+      });
+      break;
+      
+    case "cook":
+    case "kitchenhelper":
+      kitchenSection.style.display = 'block';
+      foodItems.forEach(i => {
+        foodMenu.innerHTML += `
+          <label>
+            ${i.name} Sold: 
+            <input 
+              data-name="${i.name}" 
+              data-price="${i.price}" 
+              type="number" 
+              min="0" 
+              value="0"
+              class="food-input"
+              readonly
+            />
+          </label>
+        `;
+      });
+      break;
+      
+    case "nanny":
+      nannySection.style.display = 'block';
+      break;
+  }
 
   // Load existing data if available
   if (logs[key]) {
     const existingLog = logs[key];
-    logKids.value = existingLog.kids || '';
-    logExpenses.value = existingLog.expenses || '';
+    
+    if (currentUser.role === "manager" || currentUser.role === "nanny") {
+      logKids.value = existingLog.kids || '';
+    }
+    
+    if (currentUser.role === "manager") {
+      logExpenses.value = existingLog.expenses || '';
+    }
     
     // Set drink quantities
-    if (existingLog.drinks) {
+    if (existingLog.drinks && (currentUser.role === "manager" || currentUser.role === "barista")) {
       existingLog.drinks.forEach(drink => {
         const input = document.querySelector(`.drink-input[data-name="${drink.name}"]`);
         if (input) input.value = drink.qty || 0;
@@ -185,21 +417,55 @@ function openLog(key) {
     }
     
     // Set food quantities
-    if (existingLog.food) {
+    if (existingLog.food && (currentUser.role === "manager" || currentUser.role === "cook" || currentUser.role === "kitchenhelper")) {
       existingLog.food.forEach(food => {
         const input = document.querySelector(`.food-input[data-name="${food.name}"]`);
         if (input) input.value = food.qty || 0;
       });
     }
     
+    // Set attendance
+    if (existingLog.attendance) {
+      if (currentUser.role === "manager") {
+        staff.forEach(role => {
+          const select = document.querySelector(`.attendance-select[data-role="${role}"]`);
+          if (select) select.value = existingLog.attendance[role] || 'present';
+        });
+      } else {
+        const select = document.querySelector(`.attendance-select[data-role="${currentUser.role}"]`);
+        if (select && existingLog.attendance[currentUser.role]) {
+          select.value = existingLog.attendance[currentUser.role];
+        }
+      }
+    }
+    
     renderDaySummary(key);
-    editLogBtn.style.display = 'inline';
+    editLogBtn.style.display = currentUser.role === "manager" ? 'inline' : 'none';
   } else {
     editLogBtn.style.display = 'none';
   }
 
+  // Set readonly for non-managers
+  if (currentUser.role !== "manager") {
+    logKids.readOnly = true;
+    logExpenses.readOnly = true;
+    document.querySelectorAll('.drink-input, .food-input').forEach(input => {
+      input.readOnly = true;
+    });
+    saveLogBtn.style.display = 'none';
+  } else {
+    logKids.readOnly = false;
+    logExpenses.readOnly = false;
+    document.querySelectorAll('.drink-input, .food-input').forEach(input => {
+      input.readOnly = false;
+    });
+    saveLogBtn.style.display = 'inline';
+  }
+
   // Save button with proper data handling
   saveLogBtn.onclick = function() {
+    if (currentUser.role !== "manager") return;
+    
     // Collect all data with proper parsing
     const kids = parseInt(logKids.value) || 0;
     const expenses = parseInt(logExpenses.value) || 0;
@@ -222,12 +488,20 @@ function openLog(key) {
       });
     });
     
+    // Collect attendance data
+    const attendanceData = {};
+    staff.forEach(role => {
+      const select = document.querySelector(`.attendance-select[data-role="${role}"]`);
+      attendanceData[role] = select.value;
+    });
+    
     // Update the log
     logs[key] = {
       kids: kids,
       expenses: expenses,
       drinks: drinks,
-      food: food
+      food: food,
+      attendance: attendanceData
     };
     
     // Save and update UI
@@ -255,16 +529,72 @@ function renderDaySummary(key) {
   const D = logs[key];
   if (!D) return;
   
-  const dt = D.drinks.reduce((s,x) => s + (x.qty * x.price), 0);
-  const ft = D.food.reduce((s,x) => s + (x.qty * x.price), 0);
-  const ns = D.kids * 2000;
-  logSummary.innerHTML = `
-    👶 ${D.kids} kids (Nanny PKR ${ns})<br>
-    ☕ Drinks PKR ${dt}<br>
-    🍴 Food PKR ${ft}<br>
-    💸 Exp PKR ${D.expenses}<br>
-    📈 Profit PKR ${dt + ft - D.expenses - ns}
-  `;
+  let summaryHTML = `<strong>Daily Summary for ${currentUser.role}:</strong><br>`;
+  
+  // Attendance summary for all roles
+  if (D.attendance && D.attendance[currentUser.role]) {
+    summaryHTML += `📌 Your attendance: ${D.attendance[currentUser.role]}<br>`;
+    
+    if (D.attendance[currentUser.role] === 'absent') {
+      summaryHTML += `⚠️ Absence deduction: PKR ${ABSENCE_DEDUCTION}<br>`;
+    }
+  }
+  
+  // Role-specific information
+  switch(currentUser.role) {
+    case "manager":
+      const dt = D.drinks.reduce((s,x) => s + (x.qty * x.price), 0);
+      const ft = D.food.reduce((s,x) => s + (x.qty * x.price), 0);
+      const ns = D.kids * 2000;
+      
+      let attendanceDeductions = 0;
+      staff.forEach(role => {
+        if (D.attendance[role] === 'absent') {
+          attendanceDeductions += ABSENCE_DEDUCTION;
+        }
+      });
+      
+      summaryHTML += `
+        👶 ${D.kids} kids (Nanny PKR ${ns})<br>
+        ☕ Drinks PKR ${dt}<br>
+        🍴 Food PKR ${ft}<br>
+        💸 Exp PKR ${D.expenses}<br>
+        ${attendanceDeductions > 0 ? `⚠️ Absence Deductions: PKR ${attendanceDeductions}<br>` : ''}
+        📈 Profit PKR ${dt + ft - D.expenses - ns - attendanceDeductions}
+      `;
+      break;
+      
+    case "barista":
+      const drinkTotal = D.drinks.reduce((s,x) => s + (x.qty * x.price), 0);
+      D.drinks.forEach(drink => {
+        summaryHTML += `${drink.name}: ${drink.qty} sold (PKR ${drink.qty * drink.price})<br>`;
+      });
+      summaryHTML += `☕ Total drinks sold: PKR ${drinkTotal}`;
+      break;
+      
+    case "cook":
+    case "kitchenhelper":
+      const foodTotal = D.food.reduce((s,x) => s + (x.qty * x.price), 0);
+      D.food.forEach(item => {
+        summaryHTML += `${item.name}: ${item.qty} sold (PKR ${item.qty * item.price})<br>`;
+      });
+      summaryHTML += `🍴 Total food sold: PKR ${foodTotal}`;
+      break;
+      
+    case "nanny":
+      summaryHTML += `👶 Kids cared for: ${D.kids} (Earnings: PKR ${D.kids * 2000})`;
+      break;
+      
+    case "cleaner":
+    case "receptionist":
+      summaryHTML += "No additional information available for your role";
+      break;
+      
+    default:
+      summaryHTML += "No additional information available";
+  }
+  
+  logSummary.innerHTML = summaryHTML;
 }
 
 // Monthly summary
@@ -274,6 +604,14 @@ function showMonthlySummary() {
   
   let totKids = 0, totExp = 0, totDrinks = 0, totFood = 0;
   let daysWithData = 0;
+
+  // Attendance tracking
+  const attendanceSummary = {};
+  staff.forEach(role => {
+    attendanceSummary[role] = { present: 0, absent: 0, leave: 0 };
+  });
+  let totalAbsences = 0;
+  let totalDeductions = 0;
 
   // Calculate totals for the entire month
   for(let d = 1; d <= lastDay.getDate(); d++) {
@@ -296,53 +634,140 @@ function showMonthlySummary() {
           totFood += (Number(item.qty) || 0) * (Number(item.price) || 0);
         });
       }
+      
+      // Track attendance
+      if(dayLog.attendance) {
+        staff.forEach(role => {
+          const status = dayLog.attendance[role] || 'present';
+          attendanceSummary[role][status]++;
+          if(status === 'absent') {
+            totalAbsences++;
+            totalDeductions += ABSENCE_DEDUCTION;
+          }
+        });
+      }
     }
   }
 
-  // Salary calculations
-  const totalSalaries = 50000 + 15000 + 20000 + 10000 + 20000 + 10000 + (totKids * 2000);
+  // Salary calculations with deductions
+  const baseSalaries = Object.values(salaries).reduce((a,b) => a + b, 0) - salaries.Nanny; // Nanny paid per child
+  const nannySalary = totKids * salaries.Nanny;
+  const totalSalaries = baseSalaries + nannySalary;
+  const salariesAfterDeductions = totalSalaries - totalDeductions;
+  
   const totalIncome = totDrinks + totFood;
-  const totalProfit = totalIncome - totExp - totalSalaries;
+  const totalProfit = totalIncome - totExp - salariesAfterDeductions;
 
-  // Build the summary display
-  summaryContent.innerHTML = `
-    <div class="summary-section">
-      <h3>📊 ${monthNames[m]} ${y} Summary</h3>
-      <p>Days with data: ${daysWithData}/${lastDay.getDate()}</p>
-    </div>
+  // Build role-specific summary display
+  if (currentUser.role !== "manager") {
+    summaryContent.innerHTML = `
+      <div class="summary-section">
+        <h3>📊 ${monthNames[m]} ${y} Summary (${currentUser.role})</h3>
+        <p>Days with data: ${daysWithData}/${lastDay.getDate()}</p>
+      </div>
+      
+      <div class="summary-section">
+        <h4>Your Attendance Summary</h4>
+        <p>
+          Present: ${attendanceSummary[currentUser.role]?.present || 0} days<br>
+          Absent: ${attendanceSummary[currentUser.role]?.absent || 0} days<br>
+          On Leave: ${attendanceSummary[currentUser.role]?.leave || 0} days
+        </p>
+        ${attendanceSummary[currentUser.role]?.absent > 0 ? 
+          `<p class="deduction">Total deductions: PKR ${(attendanceSummary[currentUser.role].absent * ABSENCE_DEDUCTION).toLocaleString()}</p>` : ''}
+      </div>
+    `;
     
-    <div class="summary-section">
-      <h4>Income</h4>
-      <p>☕ Drinks: PKR ${totDrinks.toLocaleString()}</p>
-      <p>🍴 Food: PKR ${totFood.toLocaleString()}</p>
-      <p class="total-line">💰 Total Income: PKR ${totalIncome.toLocaleString()}</p>
-    </div>
+    // Add role-specific information
+    switch(currentUser.role) {
+      case "barista":
+        summaryContent.innerHTML += `
+          <div class="summary-section">
+            <h4>Drinks Sales</h4>
+            <p>Total drinks revenue: PKR ${totDrinks.toLocaleString()}</p>
+          </div>
+        `;
+        break;
+        
+      case "cook":
+      case "kitchenhelper":
+        summaryContent.innerHTML += `
+          <div class="summary-section">
+            <h4>Food Sales</h4>
+            <p>Total food revenue: PKR ${totFood.toLocaleString()}</p>
+          </div>
+        `;
+        break;
+        
+      case "nanny":
+        summaryContent.innerHTML += `
+          <div class="summary-section">
+            <h4>Child Care</h4>
+            <p>Total kids cared for: ${totKids}</p>
+            <p>Total earnings: PKR ${(totKids * salaries.Nanny).toLocaleString()}</p>
+          </div>
+        `;
+        break;
+    }
     
-    <div class="summary-section">
-      <h4>Expenses</h4>
-      <p>💸 Other Expenses: PKR ${totExp.toLocaleString()}</p>
-    </div>
-    
-    <div class="summary-section">
-      <h4>Salaries</h4>
-      <p>👔 Manager: PKR 50,000</p>
-      <p>☕ Barista: PKR 15,000</p>
-      <p>👨‍🍳 Cook: PKR 20,000</p>
-      <p>🧑‍🍳 Kitchen Helper: PKR 10,000</p>
-      <p>🧹 Cleaner: PKR 20,000</p>
-      <p>💁 Receptionist: PKR 10,000</p>
-      <p>👶 Nanny (${totKids} kids): PKR ${(totKids * 2000).toLocaleString()}</p>
-      <p class="total-line">💵 Total Salaries: PKR ${totalSalaries.toLocaleString()}</p>
-    </div>
-    
-    <div class="summary-section highlight">
-      <h4>Monthly Summary</h4>
-      <p>📈 Total Income: PKR ${totalIncome.toLocaleString()}</p>
-      <p>📉 Total Expenses: PKR ${(totExp + totalSalaries).toLocaleString()}</p>
-      <p class="profit-line">💲 Net Profit: PKR ${totalProfit.toLocaleString()}</p>
-      <button id="backFromSummary" class="back-button">Back to Calendar</button>
-    </div>
-  `;
+    summaryContent.innerHTML += `
+      <div class="summary-section">
+        <p>Contact manager for any discrepancies in your records.</p>
+      </div>
+    `;
+  } else {
+    // Manager sees full summary
+    summaryContent.innerHTML = `
+      <div class="summary-section">
+        <h3>📊 ${monthNames[m]} ${y} Summary</h3>
+        <p>Days with data: ${daysWithData}/${lastDay.getDate()}</p>
+      </div>
+      
+      <div class="summary-section">
+        <h4>Income</h4>
+        <p>☕ Drinks: PKR ${totDrinks.toLocaleString()}</p>
+        <p>🍴 Food: PKR ${totFood.toLocaleString()}</p>
+        <p class="total-line">💰 Total Income: PKR ${totalIncome.toLocaleString()}</p>
+      </div>
+      
+      <div class="summary-section">
+        <h4>Expenses</h4>
+        <p>💸 Other Expenses: PKR ${totExp.toLocaleString()}</p>
+      </div>
+      
+      <div class="summary-section">
+        <h4>Salaries & Attendance</h4>
+        ${staff.map(role => `
+          <p>
+            👨‍💼 ${role}: 
+            <span class="attendance-detail">
+              (Present: ${attendanceSummary[role].present}, 
+              Leave: ${attendanceSummary[role].leave}, 
+              Absent: ${attendanceSummary[role].absent})
+            </span>
+            <br>
+            PKR ${(salaries[role] - (attendanceSummary[role].absent * ABSENCE_DEDUCTION)).toLocaleString()}
+            ${attendanceSummary[role].absent > 0 ? 
+              `<span class="deduction">-PKR ${(attendanceSummary[role].absent * ABSENCE_DEDUCTION).toLocaleString()}</span>` : ''}
+          </p>
+        `).join('')}
+        <p>Nanny (${totKids} kids): PKR ${nannySalary.toLocaleString()}</p>
+        <p class="total-line">
+          Total Salaries: PKR ${salariesAfterDeductions.toLocaleString()}
+          ${totalDeductions > 0 ? `<span class="deduction">(Deductions: PKR ${totalDeductions.toLocaleString()})</span>` : ''}
+        </p>
+      </div>
+      
+      <div class="summary-section highlight">
+        <h4>Monthly Summary</h4>
+        <p>📈 Total Income: PKR ${totalIncome.toLocaleString()}</p>
+        <p>📉 Total Expenses: PKR ${(totExp + salariesAfterDeductions).toLocaleString()}</p>
+        <p class="${totalProfit >= 0 ? 'profit-line' : 'loss-line'}">
+          💲 Net Profit: PKR ${totalProfit.toLocaleString()}
+        </p>
+      </div>
+    `;
+  }
   
   // Add event listener for the back button
   document.getElementById('backFromSummary').onclick = () => {
@@ -361,6 +786,8 @@ function saveAll() {
 
 // Task buttons
 addTaskBtn.onclick = () => {
+  if (currentUser.role !== "manager") return;
+  
   const txt = taskInput.value.trim(), dt = taskInput.dataset.date;
   if(!txt || !dt) return;
   const ix = tasks.findIndex(t => t.date === dt);
@@ -374,6 +801,8 @@ addTaskBtn.onclick = () => {
 };
 
 deleteTaskBtn.onclick = () => {
+  if (currentUser.role !== "manager") return;
+  
   const dt = taskInput.dataset.date;
   tasks = tasks.filter(t => t.date !== dt);
   taskInput.value = '';
@@ -385,6 +814,8 @@ deleteTaskBtn.onclick = () => {
 
 // Edit button functionality
 editLogBtn.onclick = () => {
+  if (currentUser.role !== "manager") return;
+  
   const key = logDate.dataset.key;
   openLog(key);
 };
@@ -406,5 +837,6 @@ showSummaryBtn.onclick = showMonthlySummary;
 closeSummaryBtn.onclick = () => summaryBox.style.display = 'none';
 backFromSummaryBtn.onclick = () => summaryBox.style.display = 'none';
 
-// Initial render
+// Initialize with login overlay
+loginOverlay.style.display = 'flex';
 renderCalendar();
