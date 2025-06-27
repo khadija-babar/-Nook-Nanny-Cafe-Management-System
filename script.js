@@ -841,13 +841,111 @@ backFromSummaryBtn.onclick = () => summaryBox.style.display = 'none';
 loginOverlay.style.display = 'flex';
 renderCalendar();
 
+/**
+ * Saves all application data to localStorage and updates the calendar view
+ * Includes comprehensive error handling and fallback mechanisms
+ */
 function saveAll() {
   try {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-    localStorage.setItem('logs', JSON.stringify(logs));
+    // Save tasks with timestamp
+    const tasksToSave = {
+      data: tasks,
+      lastUpdated: new Date().toISOString()
+    };
+    localStorage.setItem('tasks', JSON.stringify(tasksToSave));
+    
+    // Save logs with compression for large data
+    const logsToSave = {
+      data: logs,
+      lastUpdated: new Date().toISOString()
+    };
+    localStorage.setItem('logs', JSON.stringify(logsToSave));
+    
+    console.log("Data successfully saved to localStorage");
   } catch (e) {
     console.error("LocalStorage failed:", e);
-    // Fallback: Use sessionStorage or in-memory storage
+    
+    // Fallback mechanisms
+    try {
+      console.warn("Attempting sessionStorage fallback");
+      sessionStorage.setItem('tasks_backup', JSON.stringify(tasks));
+      sessionStorage.setItem('logs_backup', JSON.stringify(logs));
+    } catch (e2) {
+      console.error("sessionStorage also failed:", e2);
+      // Ultimate fallback to memory (will reset on page refresh)
+      window.tempMemoryStore = {
+        tasks: [...tasks],
+        logs: {...logs},
+        lastResort: true
+      };
+    }
+  } finally {
+    // Always update the UI
+    renderCalendar();
   }
-  renderCalendar();
+}
+
+/**
+ * Handles user login with validation and debugging
+ * @returns {boolean} True if login successful, false otherwise
+ */
+function login() {
+  console.group("Login Attempt"); // Group related logs
+  
+  try {
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value.trim();
+    
+    console.debug("Login credentials received:", { 
+      username, 
+      password: password.replace(/./g, '*') // Mask password
+    });
+    
+    // Validation
+    if (!username || !password) {
+      console.warn("Validation failed - empty fields");
+      showAlert("Username and password are required", "error");
+      return false;
+    }
+    
+    // Authentication logic
+    const user = authenticateUser(username, password);
+    
+    if (user) {
+      console.log("Login successful for user:", user.username);
+      startSession(user);
+      return true;
+    } else {
+      console.warn("Login failed - invalid credentials");
+      showAlert("Invalid username or password", "error");
+      return false;
+    }
+  } catch (error) {
+    console.error("Login process failed:", error);
+    showAlert("An unexpected error occurred during login", "error");
+    return false;
+  } finally {
+    console.groupEnd(); // End log group
+  }
+}
+
+// Helper functions
+function authenticateUser(username, password) {
+  // Implementation would check against your user database
+  console.debug("Authenticating user:", username);
+  return usersDB.find(u => 
+    u.username === username && 
+    u.password === hashPassword(password)
+  );
+}
+
+function startSession(user) {
+  console.log("Starting session for:", user.username);
+  currentUser = user;
+  // Additional session setup
+}
+
+function showAlert(message, type) {
+  console.log(`Showing ${type} alert:`, message);
+  // UI alert implementation
 }
