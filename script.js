@@ -91,7 +91,7 @@ const kitchenSection = document.getElementById('kitchenSection');
 const managerSection = document.getElementById('managerSection');
 
 // Login function
-loginBtn.onclick = function() {
+function login()  {
   const username = usernameInput.value.trim();
   const password = passwordInput.value.trim();
   
@@ -840,3 +840,14 @@ backFromSummaryBtn.onclick = () => summaryBox.style.display = 'none';
 // Initialize with login overlay
 loginOverlay.style.display = 'flex';
 renderCalendar();
+
+function saveAll() {
+  try {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    localStorage.setItem('logs', JSON.stringify(logs));
+  } catch (e) {
+    console.error("LocalStorage failed:", e);
+    // Fallback: Use sessionStorage or in-memory storage
+  }
+  renderCalendar();
+}
