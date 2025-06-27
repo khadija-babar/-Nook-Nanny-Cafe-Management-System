@@ -6,13 +6,14 @@
   --profit-green: #2ecc71;
   --loss-red: #e74c3c;
   --back-blue: #3498db;
+  --section-bg: rgba(255, 255, 255, 0.8);
 }
 
 body {
   margin: 0;
-  font-family: sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: var(--secondary);
-  overflow: hidden;
+  overflow: auto;
 }
 
 #bgVideo {
@@ -22,169 +23,394 @@ body {
   height: 100%;
   object-fit: cover;
   z-index: -1;
+  opacity: 0.8;
 }
 
 .container {
-  display: flex; 
+  display: flex;
   justify-content: center;
-  padding-top: 40px;
+  padding: 70px 20px 20px;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 .calendar {
-  background: rgba(255,255,255,0.8);
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  width: 70%;
+  max-width: 450px;
+  margin: 0 auto;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .nav {
-  display: flex; 
-  justify-content: space-between; 
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  margin-bottom: 15px;
 }
 
-.month-year { 
-  font-size: 1.5rem; 
-  font-weight: bold; 
+.nav button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav button:hover {
+  background: #e69500;
+  transform: scale(1.1);
+}
+
+.month-year {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(7,1fr);
-  gap: 5px;
-  margin-top: 10px;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-top: 15px;
 }
 
-.weekday { 
-  font-weight: bold; 
-  text-align: center; 
+.weekday {
+  font-weight: bold;
+  text-align: center;
+  padding: 8px;
+  color: #555;
 }
 
 .day {
-  padding: 10px; 
+  padding: 10px;
   text-align: center;
-  background: #f9f9f9; 
+  background: rgba(249, 249, 249, 0.8);
   cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.2s;
+  border-radius: 6px;
+  transition: all 0.2s;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  min-height: 0;
 }
 
-.day:hover { 
-  background: #e0e0e0; 
+.day:hover {
+  background: rgba(224, 224, 224, 0.8);
+  transform: translateY(-2px);
 }
 
-.today { 
-  background: var(--today-bg); 
+.today {
+  background: rgba(255, 235, 59, 0.8);
+  font-weight: bold;
+  box-shadow: 0 0 0 2px var(--primary);
 }
 
-.marked { 
-  background: #ffd699; 
-  font-weight: bold; 
+.marked {
+  background: rgba(255, 214, 153, 0.8);
+  font-weight: bold;
+  position: relative;
 }
 
-#taskMessage { 
-  margin: 10px 0; 
+.marked::after {
+  content: '•';
+  position: absolute;
+  bottom: 3px;
+  color: var(--accent);
+  font-size: 24px;
+}
+
+#taskMessage {
+  margin: 15px 0;
+  min-height: 20px;
+  color: #333;
 }
 
 .task-input-box {
-  display: flex; 
-  gap: 10px; 
-  margin-bottom: 10px;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
 }
 
-.task-input-box input { 
-  flex: 1; 
-  padding: 6px; 
+.task-input-box input,
+.task-input-box select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  min-width: 120px;
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .task-input-box button {
-  padding: 6px 12px;
-  background: var(--accent); 
+  padding: 8px 16px;
+  background: var(--accent);
   color: white;
-  border: none; 
-  border-radius: 4px; 
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.task-input-box button:hover {
+  background: #ff5349;
+  transform: translateY(-1px);
 }
 
 .summary-button-box {
-  text-align: center; 
-  margin-top: 10px;
+  text-align: center;
+  margin-top: 20px;
 }
 
-#showSummary { 
-  background: #ff9800; 
+#showSummary {
+  background: var(--primary);
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-/* Overlay styles */
+#showSummary:hover {
+  background: #e69500;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 .overlay {
-  position: fixed; 
+  position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: none; 
-  justify-content: center; 
+  background: rgba(0, 0, 0, 0.7);
+  display: none;
+  justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(5px);
 }
 
 .overlay .form {
-  background: white; 
-  padding: 20px; 
-  border-radius: 8px;
-  width: 90%; 
-  max-width: 500px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 25px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
 }
 
 .overlay .form button {
-  padding: 8px 16px; 
-  margin-top: 10px;
-  background: var(--primary); 
+  padding: 10px 18px;
+  margin: 8px 5px;
+  background: var(--primary);
   color: white;
-  border: none; 
-  border-radius: 4px; 
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 15px;
+  transition: all 0.2s;
+}
+
+.overlay .form button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .overlay .form input {
-  width: 100%; 
-  padding: 8px; 
-  margin: 8px 0;
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-size: 15px;
+  background: rgba(255, 255, 255, 0.9);
 }
 
-/* Summary specific styles */
+.role-specific-section {
+  margin: 20px 0;
+  padding: 15px;
+  background: var(--section-bg);
+  border-radius: 8px;
+  border-left: 4px solid var(--primary);
+}
+
+.role-specific-section h3 {
+  margin-top: 0;
+  color: var(--primary);
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+#attendanceSection label {
+  display: block;
+  margin: 12px 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.attendance-select {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  float: right;
+  min-width: 120px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+#drinksMenu label,
+#foodMenu label {
+  display: block;
+  margin: 12px 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+#drinksMenu input,
+#foodMenu input {
+  width: 80px;
+  float: right;
+  padding: 8px;
+  text-align: right;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: rgba(249, 249, 249, 0.9);
+}
+
+#loginOverlay .form {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.2);
+  width: 320px;
+  text-align: center;
+}
+
+#loginOverlay h2 {
+  color: var(--primary);
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+}
+
+#loginOverlay label {
+  display: block;
+  margin: 18px 0;
+  text-align: left;
+  font-weight: 500;
+}
+
+#loginOverlay input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 15px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+#loginBtn {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 15px;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+#loginBtn:hover {
+  background: #e69500;
+  transform: translateY(-2px);
+}
+
+#loginMessage {
+  margin-top: 15px;
+  color: var(--loss-red);
+  min-height: 20px;
+  font-weight: 500;
+}
+
+.logout-btn {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  padding: 8px 16px;
+  background: var(--loss-red);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 100;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  background: #c0392b;
+  transform: translateY(-1px);
+}
+
+.user-info {
+  position: fixed;
+  top: 15px;
+  right: 100px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px 15px;
+  border-radius: 6px;
+  font-size: 0.95em;
+  z-index: 100;
+  font-weight: 500;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
 .summary-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
-#closeSummary { 
+#closeSummary {
   background: var(--loss-red);
-  padding: 8px 16px;
 }
 
 #backFromSummary {
   background: var(--back-blue);
-  padding: 8px 16px;
 }
 
 .summary-section {
   margin-bottom: 20px;
-  padding: 15px;
-  background: rgba(255,255,255,0.9);
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .summary-section h3 {
   margin-top: 0;
   color: var(--primary);
   border-bottom: 2px solid var(--primary);
-  padding-bottom: 8px;
+  padding-bottom: 10px;
 }
 
 .summary-section h4 {
@@ -195,8 +421,8 @@ body {
 .total-line {
   font-weight: bold;
   border-top: 1px solid #eee;
-  padding-top: 10px;
-  margin-top: 10px;
+  padding-top: 12px;
+  margin-top: 12px;
   font-size: 1.1em;
 }
 
@@ -213,49 +439,46 @@ body {
 }
 
 .highlight {
-  background: rgba(255,245,0,0.1);
+  background: rgba(255, 245, 0, 0.1);
   border-left: 4px solid var(--primary);
-  padding-left: 12px;
+  padding-left: 15px;
 }
 
-/* Menu item styles */
-#drinksMenu label, #foodMenu label {
-  display: block;
-  margin: 10px 0;
-  padding: 8px;
-  background: rgba(255,255,255,0.7);
-  border-radius: 4px;
-}
-
-#drinksMenu input, #foodMenu input {
-  width: 70px;
-  float: right;
-  padding: 6px;
-  text-align: right;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-/* Edit button */
-#editLog {
-  background: #4CAF50;
-  margin-left: 10px;
-}
-
-/* Responsive adjustments */
 @media (max-width: 600px) {
+  .container {
+    padding: 60px 10px 10px;
+  }
+  
   .calendar {
     padding: 15px;
     width: 95%;
   }
   
-  .overlay .form {
-    width: 95%;
-    padding: 15px;
+  .day {
+    padding: 5px;
+    font-size: 0.9em;
   }
   
-  .task-input-box {
-    flex-direction: column;
+  .user-info {
+    top: 10px;
+    right: 60px;
+    font-size: 0.8em;
+  }
+  
+  .logout-btn {
+    top: 10px;
+    right: 10px;
+    padding: 6px 12px;
+    font-size: 0.8em;
+  }
+  
+  .nav button {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+  
+  .month-year {
+    font-size: 1.3rem;
   }
 }
-
