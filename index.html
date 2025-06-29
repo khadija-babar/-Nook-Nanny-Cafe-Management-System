@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Nook and Nanny Calendar</title>
   <link rel="stylesheet" href="style.css"/>
+  <script src="script.js" defer></script> <!-- Moved here and added defer -->
 </head>
 <body>
   <!-- Login Overlay -->
@@ -25,12 +26,9 @@
   </div>
 
   <!-- Seasonal Background -->
-  <div id="bgVideoContainer">
-    <video id="bgVideo" autoplay muted loop playsinline>
-      <source src="assets/videos/winter.mp4" type="video/mp4"/>
-      Your browser does not support HTML5 video.
-    </video>
-  </div>
+  <video id="bgVideo" autoplay muted loop playsinline>
+    <source src="winter.mp4" type="video/mp4"/>
+  </video>
 
   <!-- User Info Display -->
   <div id="userInfoDisplay" class="user-info" style="display: none;"></div>
@@ -78,33 +76,28 @@
     <div class="form">
       <button id="backBtn">🔙 Back</button>
       <h2 id="logDate">Log for …</h2>
-      
+      <!-- sections filled by JS -->
       <div id="nannySection" class="role-specific-section" style="display: none;">
         <label>
           Kids nanny took care of
           <input type="number" id="logKids" readonly/>
         </label>
       </div>
-      
       <div id="attendanceSection" class="role-specific-section"></div>
-      
       <div id="baristaSection" class="role-specific-section" style="display: none;">
         <h3>Drinks Sold</h3>
         <div id="drinksMenu"></div>
       </div>
-      
       <div id="kitchenSection" class="role-specific-section" style="display: none;">
         <h3>Food Sold</h3>
         <div id="foodMenu"></div>
       </div>
-      
       <div id="managerSection" class="role-specific-section" style="display: none;">
         <label>
           Expenses (ingredients etc)
           <input type="number" id="logExpenses"/>
         </label>
       </div>
-      
       <button id="saveLog" style="display:none;">Save</button>
       <button id="editLog" style="display:none;">✏️ Edit</button>
       <p id="logSummary"></p>
@@ -122,7 +115,5 @@
       <div id="summaryContent"></div>
     </div>
   </div>
-
-  <script src="script.js"></script>
 </body>
 </html>
