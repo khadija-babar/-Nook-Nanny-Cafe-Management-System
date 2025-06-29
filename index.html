@@ -25,9 +25,12 @@
   </div>
 
   <!-- Seasonal Background -->
-  <video id="bgVideo" autoplay muted loop playsinline>
-    <source src="winter.mp4" type="video/mp4"/>
-  </video>
+  <div id="bgVideoContainer">
+    <video id="bgVideo" autoplay muted loop playsinline>
+      <source src="assets/videos/winter.mp4" type="video/mp4"/>
+      Your browser does not support HTML5 video.
+    </video>
+  </div>
 
   <!-- User Info Display -->
   <div id="userInfoDisplay" class="user-info" style="display: none;"></div>
@@ -76,7 +79,6 @@
       <button id="backBtn">🔙 Back</button>
       <h2 id="logDate">Log for …</h2>
       
-      <!-- Dynamic sections will be filled by JavaScript -->
       <div id="nannySection" class="role-specific-section" style="display: none;">
         <label>
           Kids nanny took care of
