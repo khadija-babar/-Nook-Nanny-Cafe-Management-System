@@ -1,8 +1,3 @@
-// Check for localStorage support
-if (typeof(Storage) === "undefined") {
-  alert("LocalStorage is not available in your browser. Some features may not work properly.");
-}
-
 // User system with all roles
 const users = {
   "manager": { password: "manager123", role: "manager" },
@@ -189,7 +184,7 @@ function setSeasonClass(m) {
   for (let s in seasons) {
     if (seasons[s].includes(m)) {
       document.body.classList.add(s);
-      bgVideo.src = `assets/videos/${s}.mp4`;
+      bgVideo.src = s+".mp4";
     }
   }
   bgVideo.load();
@@ -526,3 +521,324 @@ function openLog(key) {
   // Back button functionality
   backBtn.onclick = function() {
     dailyLog.style.display = 'none';
+  };
+}
+
+// Day summary
+function renderDaySummary(key) {
+  const D = logs[key];
+  if (!D) return;
+  
+  let summaryHTML = `<strong>Daily Summary for ${currentUser.role}:</strong><br>`;
+  
+  // Attendance summary for all roles
+  if (D.attendance && D.attendance[currentUser.role]) {
+    summaryHTML += `📌 Your attendance: ${D.attendance[currentUser.role]}<br>`;
+    
+    if (D.attendance[currentUser.role] === 'absent') {
+      summaryHTML += `⚠️ Absence deduction: PKR ${ABSENCE_DEDUCTION}<br>`;
+    }
+  }
+  
+  // Role-specific information
+  switch(currentUser.role) {
+    case "manager":
+      const dt = D.drinks.reduce((s,x) => s + (x.qty * x.price), 0);
+      const ft = D.food.reduce((s,x) => s + (x.qty * x.price), 0);
+      const ns = D.kids * 2000;
+      
+      let attendanceDeductions = 0;
+      staff.forEach(role => {
+        if (D.attendance[role] === 'absent') {
+          attendanceDeductions += ABSENCE_DEDUCTION;
+        }
+      });
+      
+      summaryHTML += `
+        👶 ${D.kids} kids (Nanny PKR ${ns})<br>
+        ☕ Drinks PKR ${dt}<br>
+        🍴 Food PKR ${ft}<br>
+        💸 Exp PKR ${D.expenses}<br>
+        ${attendanceDeductions > 0 ? `⚠️ Absence Deductions: PKR ${attendanceDeductions}<br>` : ''}
+        📈 Profit PKR ${dt + ft - D.expenses - ns - attendanceDeductions}
+      `;
+      break;
+      
+    case "barista":
+      const drinkTotal = D.drinks.reduce((s,x) => s + (x.qty * x.price), 0);
+      D.drinks.forEach(drink => {
+        summaryHTML += `${drink.name}: ${drink.qty} sold (PKR ${drink.qty * drink.price})<br>`;
+      });
+      summaryHTML += `☕ Total drinks sold: PKR ${drinkTotal}`;
+      break;
+      
+    case "cook":
+    case "kitchenhelper":
+      const foodTotal = D.food.reduce((s,x) => s + (x.qty * x.price), 0);
+      D.food.forEach(item => {
+        summaryHTML += `${item.name}: ${item.qty} sold (PKR ${item.qty * item.price})<br>`;
+      });
+      summaryHTML += `🍴 Total food sold: PKR ${foodTotal}`;
+      break;
+      
+    case "nanny":
+      summaryHTML += `👶 Kids cared for: ${D.kids} (Earnings: PKR ${D.kids * 2000})`;
+      break;
+      
+    case "cleaner":
+    case "receptionist":
+      summaryHTML += "No additional information available for your role";
+      break;
+      
+    default:
+      summaryHTML += "No additional information available";
+  }
+  
+  logSummary.innerHTML = summaryHTML;
+}
+
+// Monthly summary
+function showMonthlySummary() {
+  const y = current.getFullYear(), m = current.getMonth();
+  const lastDay = new Date(y, m + 1, 0);
+  
+  let totKids = 0, totExp = 0, totDrinks = 0, totFood = 0;
+  let daysWithData = 0;
+
+  // Attendance tracking
+  const attendanceSummary = {};
+  staff.forEach(role => {
+    attendanceSummary[role] = { present: 0, absent: 0, leave: 0 };
+  });
+  let totalAbsences = 0;
+  let totalDeductions = 0;
+
+  // Calculate totals for the entire month
+  for(let d = 1; d <= lastDay.getDate(); d++) {
+    const key = `${y}-${m}-${d}`;
+    if(logs[key]) {
+      daysWithData++;
+      const dayLog = logs[key];
+      
+      totKids += Number(dayLog.kids) || 0;
+      totExp += Number(dayLog.expenses) || 0;
+      
+      if(dayLog.drinks && Array.isArray(dayLog.drinks)) {
+        dayLog.drinks.forEach(drink => {
+          totDrinks += (Number(drink.qty) || 0) * (Number(drink.price) || 0);
+        });
+      }
+      
+      if(dayLog.food && Array.isArray(dayLog.food)) {
+        dayLog.food.forEach(item => {
+          totFood += (Number(item.qty) || 0) * (Number(item.price) || 0);
+        });
+      }
+      
+      // Track attendance
+      if(dayLog.attendance) {
+        staff.forEach(role => {
+          const status = dayLog.attendance[role] || 'present';
+          attendanceSummary[role][status]++;
+          if(status === 'absent') {
+            totalAbsences++;
+            totalDeductions += ABSENCE_DEDUCTION;
+          }
+        });
+      }
+    }
+  }
+
+  // Salary calculations with deductions
+  const baseSalaries = Object.values(salaries).reduce((a,b) => a + b, 0) - salaries.Nanny; // Nanny paid per child
+  const nannySalary = totKids * salaries.Nanny;
+  const totalSalaries = baseSalaries + nannySalary;
+  const salariesAfterDeductions = totalSalaries - totalDeductions;
+  
+  const totalIncome = totDrinks + totFood;
+  const totalProfit = totalIncome - totExp - salariesAfterDeductions;
+
+  // Build role-specific summary display
+  if (currentUser.role !== "manager") {
+    summaryContent.innerHTML = `
+      <div class="summary-section">
+        <h3>📊 ${monthNames[m]} ${y} Summary (${currentUser.role})</h3>
+        <p>Days with data: ${daysWithData}/${lastDay.getDate()}</p>
+      </div>
+      
+      <div class="summary-section">
+        <h4>Your Attendance Summary</h4>
+        <p>
+          Present: ${attendanceSummary[currentUser.role]?.present || 0} days<br>
+          Absent: ${attendanceSummary[currentUser.role]?.absent || 0} days<br>
+          On Leave: ${attendanceSummary[currentUser.role]?.leave || 0} days
+        </p>
+        ${attendanceSummary[currentUser.role]?.absent > 0 ? 
+          `<p class="deduction">Total deductions: PKR ${(attendanceSummary[currentUser.role].absent * ABSENCE_DEDUCTION).toLocaleString()}</p>` : ''}
+      </div>
+    `;
+    
+    // Add role-specific information
+    switch(currentUser.role) {
+      case "barista":
+        summaryContent.innerHTML += `
+          <div class="summary-section">
+            <h4>Drinks Sales</h4>
+            <p>Total drinks revenue: PKR ${totDrinks.toLocaleString()}</p>
+          </div>
+        `;
+        break;
+        
+      case "cook":
+      case "kitchenhelper":
+        summaryContent.innerHTML += `
+          <div class="summary-section">
+            <h4>Food Sales</h4>
+            <p>Total food revenue: PKR ${totFood.toLocaleString()}</p>
+          </div>
+        `;
+        break;
+        
+      case "nanny":
+        summaryContent.innerHTML += `
+          <div class="summary-section">
+            <h4>Child Care</h4>
+            <p>Total kids cared for: ${totKids}</p>
+            <p>Total earnings: PKR ${(totKids * salaries.Nanny).toLocaleString()}</p>
+          </div>
+        `;
+        break;
+    }
+    
+    summaryContent.innerHTML += `
+      <div class="summary-section">
+        <p>Contact manager for any discrepancies in your records.</p>
+      </div>
+    `;
+  } else {
+    // Manager sees full summary
+    summaryContent.innerHTML = `
+      <div class="summary-section">
+        <h3>📊 ${monthNames[m]} ${y} Summary</h3>
+        <p>Days with data: ${daysWithData}/${lastDay.getDate()}</p>
+      </div>
+      
+      <div class="summary-section">
+        <h4>Income</h4>
+        <p>☕ Drinks: PKR ${totDrinks.toLocaleString()}</p>
+        <p>🍴 Food: PKR ${totFood.toLocaleString()}</p>
+        <p class="total-line">💰 Total Income: PKR ${totalIncome.toLocaleString()}</p>
+      </div>
+      
+      <div class="summary-section">
+        <h4>Expenses</h4>
+        <p>💸 Other Expenses: PKR ${totExp.toLocaleString()}</p>
+      </div>
+      
+      <div class="summary-section">
+        <h4>Salaries & Attendance</h4>
+        ${staff.map(role => `
+          <p>
+            👨‍💼 ${role}: 
+            <span class="attendance-detail">
+              (Present: ${attendanceSummary[role].present}, 
+              Leave: ${attendanceSummary[role].leave}, 
+              Absent: ${attendanceSummary[role].absent})
+            </span>
+            <br>
+            PKR ${(salaries[role] - (attendanceSummary[role].absent * ABSENCE_DEDUCTION)).toLocaleString()}
+            ${attendanceSummary[role].absent > 0 ? 
+              `<span class="deduction">-PKR ${(attendanceSummary[role].absent * ABSENCE_DEDUCTION).toLocaleString()}</span>` : ''}
+          </p>
+        `).join('')}
+        <p>Nanny (${totKids} kids): PKR ${nannySalary.toLocaleString()}</p>
+        <p class="total-line">
+          Total Salaries: PKR ${salariesAfterDeductions.toLocaleString()}
+          ${totalDeductions > 0 ? `<span class="deduction">(Deductions: PKR ${totalDeductions.toLocaleString()})</span>` : ''}
+        </p>
+      </div>
+      
+      <div class="summary-section highlight">
+        <h4>Monthly Summary</h4>
+        <p>📈 Total Income: PKR ${totalIncome.toLocaleString()}</p>
+        <p>📉 Total Expenses: PKR ${(totExp + salariesAfterDeductions).toLocaleString()}</p>
+        <p class="${totalProfit >= 0 ? 'profit-line' : 'loss-line'}">
+          💲 Net Profit: PKR ${totalProfit.toLocaleString()}
+        </p>
+      </div>
+    `;
+  }
+  
+  // Add event listener for the back button
+  document.getElementById('backFromSummary').onclick = () => {
+    summaryBox.style.display = 'none';
+  };
+  
+  summaryBox.style.display = 'flex';
+}
+
+// Save and rerender
+function saveAll() {
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+  localStorage.setItem('logs', JSON.stringify(logs));
+  renderCalendar();
+}
+
+// Task buttons
+addTaskBtn.onclick = () => {
+  if (currentUser.role !== "manager") return;
+  
+  const txt = taskInput.value.trim(), dt = taskInput.dataset.date;
+  if(!txt || !dt) return;
+  const ix = tasks.findIndex(t => t.date === dt);
+  if(ix >= 0) tasks[ix].text = txt;
+  else tasks.push({date: dt, text: txt});
+  taskInput.value = '';
+  taskInput.dataset.date = '';
+  taskInput.style.display = addTaskBtn.style.display = deleteTaskBtn.style.display = 'none';
+  taskMessage.textContent = '';
+  saveAll();
+};
+
+deleteTaskBtn.onclick = () => {
+  if (currentUser.role !== "manager") return;
+  
+  const dt = taskInput.dataset.date;
+  tasks = tasks.filter(t => t.date !== dt);
+  taskInput.value = '';
+  taskInput.dataset.date = '';
+  taskInput.style.display = addTaskBtn.style.display = deleteTaskBtn.style.display = 'none';
+  taskMessage.textContent = '';
+  saveAll();
+};
+
+// Edit button functionality
+editLogBtn.onclick = () => {
+  if (currentUser.role !== "manager") return;
+  
+  const key = logDate.dataset.key;
+  openLog(key);
+};
+
+// Navigation buttons
+prevBtn.onclick = () => { 
+  current.setMonth(current.getMonth() - 1); 
+  saveAll(); 
+};
+
+nextBtn.onclick = () => { 
+  current.setMonth(current.getMonth() + 1); 
+  saveAll(); 
+};
+
+showSummaryBtn.onclick = showMonthlySummary;
+
+// Close summary buttons
+closeSummaryBtn.onclick = () => summaryBox.style.display = 'none';
+backFromSummaryBtn.onclick = () => summaryBox.style.display = 'none';
+
+// Initialize with login overlay
+loginOverlay.style.display = 'flex';
+renderCalendar();
+
+
