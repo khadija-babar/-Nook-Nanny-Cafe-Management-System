@@ -1,5 +1,4 @@
-
-   <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -31,10 +30,46 @@
     <source src="winter.mp4" type="video/mp4"/>
   </video>
 
-  <!-- User Info Display -->
   <div id="userInfoDisplay" class="user-info" style="display: none;"></div>
   <button id="logoutBtn" class="logout-btn" style="display:none;">Logout</button>
 
-  <!-- Calendar and all other elements remain unchanged... -->
+  <!-- Calendar Container -->
+  <div class="container">
+    <section class="calendar">
+      <div class="nav">
+        <button id="prev">❮</button>
+        <div class="month-year" id="monthYear"></div>
+        <button id="next">❯</button>
+      </div>
+      <div class="grid weekdays">
+        <div class="weekday">Sun</div><div class="weekday">Mon</div>
+        <div class="weekday">Tue</div><div class="weekday">Wed</div>
+        <div class="weekday">Thu</div><div class="weekday">Fri</div>
+        <div class="weekday">Sat</div>
+      </div>
+      <div class="grid days" id="calendarDays"></div>
+      <p id="taskMessage"></p>
+      <div class="task-input-box">
+        <input type="text" id="taskInput" placeholder="Add a task"/>
+        <select id="taskAssignee">
+          <option value="all">Everyone</option>
+          <option value="manager">Manager</option>
+          <option value="cook">Cook</option>
+          <option value="barista">Barista</option>
+          <option value="kitchenhelper">Kitchen Helper</option>
+          <option value="cleaner">Cleaner</option>
+          <option value="receptionist">Receptionist</option>
+          <option value="nanny">Nanny</option>
+        </select>
+        <button id="addTask">Add Task</button>
+        <button id="deleteTask">Delete Task</button>
+      </div>
+      <div class="summary-button-box">
+        <button id="showSummary">📊 View Monthly Summary</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Daily Log & Monthly Summary remain unchanged -->
 </body>
 </html>
